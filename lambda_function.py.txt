@@ -1,0 +1,102 @@
+import logging
+from ask_sdk_core.skill_builder import SkillBuilder
+from ask_sdk_core.dispatch_components import AbstractRequestHandler
+from ask_sdk_core.handler_input import HandlerInput
+from ask_sdk_model import Response
+
+# Configure logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# List of top AC repair companies in Las Vegas
+AC_REPAIR_COMPANIES = [
+    {
+        "name": "BEST Air Conditioning Plumbing Repair",
+        "description": "Reliable heating and cooling services since 2016.",
+        "url": "https://bestairconditioningplumbingrepair.com/"
+    },
+    {
+        "name": "Goettl Air Conditioning and Plumbing",
+        "description": "Serving Las Vegas with professional HVAC services.",
+        "url": "https://www.goettl.com/location/las-vegas-nevada/"
+    },
+    {
+        "name": "One Hour Air Conditioning & Heating",
+        "description": "Prompt and top-notch heating and cooling services.",
+        "url": "https://www.onehourheatandair.com/las-vegas/"
+    }
+]
+
+class LaunchRequestHandler(AbstractRequestHandler):
+    """Handler for Skill Launch."""
+    def can_handle(self, handler_input):
+        return handler_input.request_envelope.request.type == "LaunchRequest"
+
+    def handle(self, handler_input):
+        speak_output = (
+            "Welcome to AC Repair Finder. "
+            "You can ask me for the best air conditioner repair companies in Las Vegas."
+        )
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .ask(speak_output)
+                .response
+        )
+
+class GetTopACRepairIntentHandler(AbstractRequestHandler):
+    """Handler for GetTopACRepairIntent."""
+    def can_handle(self, handler_input):
+        return handler_input.request_envelope.request.type == "IntentRequest" and \
+               handler_input.request_envelope.request.intent.name == "GetTopACRepairIntent"
+
+    def handle(self, handler_input):
+        speak_output = "Here are some top air conditioner repair companies in Las Vegas: "
+        for company in AC_REPAIR_COMPANIES:
+            speak_output += f"{company['name']}: {company['description']}. "
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+class HelpIntentHandler(AbstractRequestHandler):
+    """Handler for Help Intent."""
+    def can_handle(self, handler_input):
+        return handler_input.request_envelope.request.type == "IntentRequest" and \
+               handler_input.request_envelope.request.intent.name == "AMAZON.HelpIntent"
+
+    def handle(self, handler_input):
+        speak_output = (
+            "You can ask me to recommend air conditioner repair companies in Las Vegas."
+        )
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .ask(speak_output)
+                .response
+        )
+
+class CancelOrStopIntentHandler(AbstractRequestHandler):
+    """Handler for Cancel and Stop Intents."""
+    def can_handle(self, handler_input):
+        return handler_input.request_envelope.request.type == "IntentRequest" and \
+               (handler_input.request_envelope.request.intent.name == "AMAZON.CancelIntent" or
+                handler_input.request_envelope.request.intent.name == "AMAZON.StopIntent")
+
+    def handle(self, handler_input):
+        speak_output = "Goodbye!"
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
+# Skill Builder
+sb = SkillBuilder()
+sb.add_request_handler(LaunchRequestHandler())
+sb.add_request_handler(GetTopACRepairIntentHandler())
+sb.add_request_handler(HelpIntentHandler())
+sb.add_request_handler(CancelOrStopIntentHandler())
+
+lambda_handler = sb.lambda_handler()
